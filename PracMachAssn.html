@@ -64,6 +64,8 @@ img {
 </div>
 
 
+<p>This assignment uses data from <em>Ugulino, Wallace, et al.</em> “Wearable computing: accelerometers’ data classification of body postures and movements.” <em>Advances in Artificial Intelligence-SBIA 2012. Springer Berlin Heidelberg, 2012. 52-61.</em></p>
+<p>The dataset consists of data for six people whow were equipped with accelerometers whilst performing a weight lifting exercise. Numerous parameters were recorded. The dumbells were also equipped with accelormeters. They performed the exercises in five ways. Only one way was correct. The goal of this assignment is to seee if the five methods used can be detected using the accelorometers. In the dataset the 5 methods were call ‘classe’ and assigned as ‘A’, ‘B’, ‘C’, ‘D’ or’E’.</p>
 <div id="data-preparation" class="section level3">
 <h3>Data Preparation</h3>
 <p>The neccessary packages are loaded and the data is read into dataframes.</p>
@@ -72,9 +74,9 @@ library(psych)
 library(reshape2, ggplot2)
 library(randomForest)
 
-weightsTrain  &lt;- read.csv('/home/tom/Dropbox/Coursera_Prac_Mach/Assn1/pml-training.csv',
+weightsTrain  &lt;- read.csv('pml-training.csv',
                           header = TRUE)
-weightsTest  &lt;- read.csv('/home/tom/Dropbox/Coursera_Prac_Mach/Assn1/pml-testing.csv',
+weightsTest  &lt;- read.csv('pml-testing.csv',
                           header = TRUE)</code></pre>
 <p>Create training, validation and test data sets</p>
 <pre class="r"><code>set.seed(10)
