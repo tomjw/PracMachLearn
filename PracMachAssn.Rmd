@@ -1,0 +1,133 @@
+---
+title: Practical Machine Learning Course- Assignment
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+```
+
+This assignment uses data from *Ugulino, Wallace, et al.* "Wearable computing: accelerometers’ data classification of body postures and movements." *Advances in Artificial Intelligence-SBIA 2012. Springer Berlin Heidelberg, 2012. 52-61.*
+
+The dataset consists of data for six people who were equipped with accelerometers whilst performing a weight lifting exercise. Numerous parameters were recorded.  The dumbells were also equipped with accelormeters.  They performed the exercises in five ways.  Only one way was correct.  The goal of this assignment is to seee if the five methods used can be detected using the accelorometers.  In the dataset the 5 methods are the variable 'classe' and assigned as 'A', 'B', 'C', 'D' or 'E'.
+ 
+
+###Data Preparation
+
+The neccessary packages are loaded and the data is read into dataframes.
+
+```{r message = FALSE}
+library(caret)
+library(psych)
+library(reshape2, ggplot2)
+library(randomForest)
+
+weightsTrain  <- read.csv('pml-training.csv',
+                          header = TRUE)
+weightsTest  <- read.csv('pml-testing.csv',
+                          header = TRUE)
+```
+
+
+
+Create training, validation and test data sets
+
+```{r}
+set.seed(10)
+
+inTrain = createDataPartition(weightsTrain$X, p = 0.7, list = FALSE)
+training = weightsTrain[ inTrain,]
+validate = weightsTrain[-inTrain,]
+testing <- weightsTest
+```
+
+Remove columns with incomplete data
+
+```{r}
+training.complete <- training[,!sapply(training,function(x) any(is.na(x)))]
+```
+
+
+### Examination of Variables
+
+The training dataset is examined to find suitable varibles to be used in a prediction model.
+Histograms are produced and a sample is shown below.
+
+```{r message = FALSE, fig.width=8,fig.height=7}
+        d <- melt(training.complete[,c(30:70)])
+        ggplot(d,aes(x = value)) + 
+        facet_wrap(~variable,scales = "free_x") + 
+        geom_histogram()
+```
+
+From the histograms the variables that  have numerous peaks, which 
+may correspond to the 5 classes, are chosen. 
+```{r}
+training.complete.cut <- training.complete[c(8,9,10,11,24,25,26,30,31,32,33,49,
+        50,51,65,66,67,71,72,73,87,88,89,93)]
+```
+
+the variables are: 
+```{r}
+colnames(training.complete.cut)
+```
+
+Make sure all datasets contain the same columns.
+
+```{r}
+validate.complete.cut <- validate[,colnames(training.complete.cut)]
+testing.complete.cut <- testing[,colnames(training.complete.cut)[-24]]
+```
+
+A check of the suitability of the variables is done using principal component analysis
+
+
+```{r message = FALSE, fig.width=8,fig.height=8}
+pc <- principal(r = training.complete.cut[,-24], nfactors = 2, rotate = 'varimax')
+biplot(pc, main = 'Biplot of Rotated Principal Components')
+```
+
+From the plot it appears that the variables can seperate the data set into 5 groups.
+
+### Model Buildng
+
+
+A random forest calssifier is now built using the selected variables.
+
+```{r, cache=TRUE}
+RFmodel <- randomForest(classe ~ .,
+      data=training.complete.cut, 
+      ntree=50,
+      mtry=4,
+      importance=TRUE,
+      na.action=na.roughfix,
+      replace=FALSE)
+
+RFmodel
+      
+```
+ 
+The model does extemely well  on the training data so there is no need to refine
+it at this stage.
+
+### Validation
+
+The model is now tried on the validation data:
+
+```{r} 
+predictionsVal <- predict(RFmodel, validate.complete.cut)     
+confusionMatrix(predictionsVal, validate.complete.cut$classe)
+```
+Whilst only one trial was conducted the result is extremely good and it does not seem neccesary to use other cross-validation procedures such as K-folds to further assess out-of-sample performance.  An out of sample accuracy close to 98% is expected.  
+
+The prediction model is now run against the test data.
+
+```{r}
+predictionsTest <- predict(RFmodel, testing.complete.cut)
+predictionsTest
+```
+
+The test predictions were submitted with a result of 20/20, confirming the 
+accuracy of the model.
+
+
+
